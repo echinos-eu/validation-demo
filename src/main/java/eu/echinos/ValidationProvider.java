@@ -49,6 +49,10 @@ public class ValidationProvider extends FhirValidator {
 
     NpmPackageValidationSupport npmPackageSupport = new NpmPackageValidationSupport(ctx);
     npmPackageSupport.loadPackageFromClasspath(
+        "classpath:package/de.basisprofil.r4-1.3.2.tgz");
+    npmPackageSupport.loadPackageFromClasspath(
+        "classpath:package/kbv.ita.for-1.1.0.tgz");
+    npmPackageSupport.loadPackageFromClasspath(
         "classpath:package/de.gematik.elektronische-versicherungsbescheinigung-1.0.0-rc3.tgz");
     supportChain.addValidationSupport(npmPackageSupport);
 
