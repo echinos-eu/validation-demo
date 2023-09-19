@@ -4,14 +4,19 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.validation.FhirValidator;
 import java.io.IOException;
+import org.hl7.fhir.common.hapi.validation.support.CachingValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService;
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.NpmPackageValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.SnapshotGeneratingValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
+import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 
 public class ValidationProvider extends FhirValidator {
 
+  public static void main(String[] args) throws IOException {
+    ValidationProvider val = new ValidationProvider(FhirContext.forR4());
+  }
   public ValidationProvider(FhirContext ctx) throws IOException {
     super(ctx);
 
@@ -31,7 +36,18 @@ public class ValidationProvider extends FhirValidator {
 
     NpmPackageValidationSupport npmPackageSupport = new NpmPackageValidationSupport(ctx);
     npmPackageSupport.loadPackageFromClasspath("classpath:package/de.gematik.elektronische-versicherungsbescheinigung-1.0.0-rc3.tgz");
+    supportChain.addValidationSupport(npmPackageSupport);
 
+    // Wrap the chain in a cache to improve performance
+    CachingValidationSupport cache = new CachingValidationSupport(supportChain);
 
+    // Create a validator using the FhirInstanceValidator module. We can use this
+    // validator to perform validation
+    FhirInstanceValidator validatorModule = new FhirInstanceValidator(cache);
+
+    validatorModule.setAnyExtensionsAllowed(false);
+    validatorModule.setErrorForUnknownProfiles(true);
+
+    registerValidatorModule(validatorModule);
   }
 }
